@@ -40,7 +40,7 @@ const userSchema = new Schema(
 
     watchHistory: [
       {
-        type: Schema.type.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "Video",
       },
     ],
@@ -59,19 +59,20 @@ const userSchema = new Schema(
   }
 );
 
-userSchema.pre("save", async (next) => {
-  if (!this.isModified) return next();
+userSchema.pre("save", async function (next) {
 
-  this.password = bcrypt.hash(this.password, 10);
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
 /** chack password */
-userSchema.methods.isPasswordCorrect = async (password) =>
-  await bcrypt.compare(password, this.password);
+userSchema.methods.isPasswordCorrect = async function (password) {
+  return await bcrypt.compare(password, this.password);
+}
 
-userSchema.methods.generateAccessToken = () =>
-  jwt.sign(
+userSchema.methods.generateAccessToken = function () {
+return  jwt.sign(
     {
       _id: this._id,
       email: this.email,
@@ -81,16 +82,16 @@ userSchema.methods.generateAccessToken = () =>
     process.env.ACCESS_SECRET_TOKEN,
     { expiresIn: process.env.ACCESS_TOKEN_EXPIRE }
   );
+}
+userSchema.methods.refreshAccessToken = function () {
+return  jwt.sign(
+    {
+      _id: this._id,
 
-  userSchema.methods.refreshAccessToken = ()=>
-    jwt.sign(
-      {
-        _id: this._id,
-
-      },
-      process.env.REFRESH_ACCESS_TOKEN,
-      { expiresIn: process.env.REFRESH_ACCESS_EXPIRE }
-    );
-  
+    },
+    process.env.REFRESH_ACCESS_TOKEN,
+    { expiresIn: process.env.REFRESH_ACCESS_EXPIRE }
+  );
+}
 
 export const User = model("User", userSchema);
