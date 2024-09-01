@@ -78,9 +78,11 @@ const getSubscribedChannels = asyncHendler(async (req, res) => {
             throw new ApiError(400, "subscriber is not found");
         }
 
-        const channel = await Subscription.find({
-            subscriber: subscriber?._id
-        });
+        const channel = await Subscription.find(
+            {
+                subscriber: subscriber?._id
+            }
+        );
 
         return res
             .status(200)

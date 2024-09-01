@@ -1,17 +1,25 @@
+// Import required modules
 import asyncHendler from "../utils/asyncHendler.js";
 import { User } from "../models/users.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
-
+// Constant for cookie options (could be in a separate config file)
 const option = {
     httpOnly: true,
     secure: true
 };
 
-
+/**
+ * Generates a new access token and refresh token for a given user ID.
+ *
+ * @param {String} userId The ID of the user.
+ * @returns {Object} An object containing the access token and refresh token.
+ * @throws {ApiError} If the user is not found.
+ */
 const generateAccessTokenAndRefreshAccessToken = async (userId) => {
 
     const user = await User.findById(userId);
@@ -26,7 +34,13 @@ const generateAccessTokenAndRefreshAccessToken = async (userId) => {
 
 }
 
-
+/**
+ * Handles user registration with avatar and cover image upload.
+ *
+ * @param {Object} req The Express request object.
+ * @param {Object} res The Express response object.
+ * @throws {ApiError} If there are any errors during registration.
+ */
 const userRegister = asyncHendler(async (req, res) => {
 
     const { fullName, email, username, password } = req.body;
@@ -40,7 +54,7 @@ const userRegister = asyncHendler(async (req, res) => {
         coverImageLocalPath = req.files.coverImage[0].path;
     }
 
-
+    // Handle avatar upload (optional chaining for error handling)
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required");
     }
@@ -52,7 +66,7 @@ const userRegister = asyncHendler(async (req, res) => {
         throw new ApiError(400, "Avatar file is required");
     }
 
-
+    // Create user with uploaded images
     const user = await User.create({
         fullName,
         avatar: avatar.url,
@@ -66,6 +80,7 @@ const userRegister = asyncHendler(async (req, res) => {
         "-password -refreshToken"
     );
 
+    // Fetch and return created user without sensitive data
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user");
     }
@@ -211,7 +226,7 @@ const getCurrentUser = asyncHendler(async (req, res) => {
                 200,
                 req?.user,
                 "User fetched successfully"
-            ))
+            ));
     } catch (error) {
         return res.status(200).json(new ApiError(500, "server error"))
     }
@@ -363,7 +378,7 @@ const getUserChannelProfile = asyncHendler(async (req, res) => {
 
         }
     ]);
-   
+
     if (!channel?.length) {
         throw new ApiError(404, "channel does not exists")
     }
@@ -376,6 +391,61 @@ const getUserChannelProfile = asyncHendler(async (req, res) => {
 
 });
 
+const getWatchHistory = asyncHendler(async (req, res) => {
+
+    const user = await User.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup: {
+                from: "video",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullName: 1,
+                                        username: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            woner: {
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]);
+
+    return res.
+        status(200).
+        json(
+            new ApiResponse(
+                200,
+                user[0].watchHistory,
+                "Watch history fetched successfully"
+            )
+        )
+})
+
 export {
     userRegister,
     loginUser,
@@ -386,5 +456,6 @@ export {
     getCurrentUser,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
 };

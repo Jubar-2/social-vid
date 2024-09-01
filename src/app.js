@@ -4,6 +4,7 @@ import express from 'express';
 import { limit_size } from './constants.js';
 import userRouter from './routes/user.route.js';
 import subscriptionRouter from './routes/subscription.routes.js';
+import videosRouter from './routes/video.routes.js'
 
 const app = express();
 
@@ -19,7 +20,8 @@ app.use(cookieParser());
 
 //routers
 app.use("/api/v1/user", userRouter);
-app.use("/api/v1/subscriptions", subscriptionRouter)
+app.use("/api/v1/subscriptions", subscriptionRouter);
+app.use("/api/v1/videos", videosRouter);
 
 export { app };
 
