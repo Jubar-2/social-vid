@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import { error } from "console";
 import fs from "fs";
 
 cloudinary.config({
@@ -17,9 +18,22 @@ const uploadOnCloudinary = async (loaclFilePath) => {
         console.log("File upload on cloudinary", response.url)
         return response;
     } catch (err) {
+        console.log(err)
         fs.unlinkSync(loaclFilePath);
         return null;
     }
 }
 
-export { uploadOnCloudinary };
+const deleteUploadFileOncloudinary = async (publicId,resourceType) => {
+    try {
+        return await cloudinary.uploader.destroy(publicId,{
+            resource_type: resourceType
+        });
+
+    } catch (err) {
+        console.log(error)
+        return null;
+    }
+}
+
+export { uploadOnCloudinary, deleteUploadFileOncloudinary };

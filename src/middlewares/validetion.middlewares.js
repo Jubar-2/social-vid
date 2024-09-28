@@ -30,7 +30,7 @@ const addUserValidetion = [
         .isLength({ min: 1 })
         .withMessage("fullname is required")
         .isAlpha("en-US")
-        .withMessage("fullname is is invalid")
+        .withMessage("fullname is invalid")
         .trim(),
 
 ];
@@ -42,7 +42,7 @@ const addUserValidetionResult = (req, res, next) => {
     if (Object.keys(mapedError).length === 0) {
         next();
     } else {
-        res.status(500).json({
+        res.status(400).json({
             errors: mapedError
         });
 

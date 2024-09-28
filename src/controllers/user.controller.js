@@ -45,9 +45,7 @@ const userRegister = asyncHendler(async (req, res) => {
 
     const { fullName, email, username, password } = req.body;
 
-
     const avatarLocalPath = req.files?.avatar[0]?.path;
-
 
     let coverImageLocalPath;
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
@@ -189,7 +187,7 @@ const changeCurrentPassword = asyncHendler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
     try {
-        console.log(req.user?._id)
+      
         const user = await User.findById(req.user?._id);
 
         if (!user) {
