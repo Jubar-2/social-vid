@@ -81,7 +81,7 @@ const getAllVideos = asyncHendler(async (req, res) => {
         )
 
 
-        const videoAggregate = await Video.aggregate(pipeline);
+        const videoAggregate = Video.aggregate(pipeline);
 
         const aggregatePagination = await Video.aggregatePaginate(videoAggregate, {
             limit: limit,
